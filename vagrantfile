@@ -1,0 +1,73 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+
+VAGRANT_BOX         = "generic/ubuntu2204"
+VAGRANT_BOX_VERSION = "4.2.10"
+CPUS_MASTER_NODE    = 2
+CPUS_WORKER_NODE    = 2
+MEMORY_MASTER_NODE  = 2048
+MEMORY_WORKER_NODE  = 1024
+WORKER_NODES_COUNT  = 2
+
+Vagrant.configure(2) do |config|
+  config.vm.provision "shell", path: "scripts/node-bootstrap.sh"
+
+  config.vm.define "masternode" do |node|
+    # ENV['VAGRANT_NO_PARALLEL'] = 'yes'
+    config.vm.synced_folder ".", "/vagrant"
+    node.vm.box_check_update  = false
+    node.vm.box = VAGRANT_BOX
+    node.vm.box_version = VAGRANT_BOX_VERSION
+    node.vm.hostname = "masternode.lan.com"
+
+    node.vm.network "private_network", ip: "172.16.17.100"
+
+    node.vm.provider :libvirt do |v|
+      v.memory  = 2048
+      v.nested  = true
+      v.cpus    = 2
+    end
+    node.vm.provision "shell", path: "scripts/node-masterbootstrap.sh"
+  end
+
+  config.vm.define "workernode1" do |node|
+  # ENV['VAGRANT_NO_PARALLEL'] = 'no'
+
+    node.vm.box = VAGRANT_BOX
+    node.vm.box_version = VAGRANT_BOX_VERSION
+    node.vm.box_check_update  = false
+    node.vm.hostname = "workernode1.lan.com"
+
+
+
+    node.vm.network "private_network", ip: "172.16.17.101"
+
+    node.vm.provider :libvirt do |v|
+      v.memory  = 2048
+      v.nested  = true
+      v.cpus    = 2
+    end
+    node.vm.provision "shell", path: "scripts/node-workerbootstrap.sh"
+
+  end
+
+  config.vm.define "workernode2" do |node|
+
+    node.vm.box_check_update  = false
+    node.vm.box = VAGRANT_BOX
+    node.vm.box_version = VAGRANT_BOX_VERSION
+    node.vm.hostname = "workernode2.lan.com"
+
+    node.vm.network "private_network", ip: "172.16.17.102"
+
+    node.vm.provider :libvirt do |v|
+      v.memory  = 2048
+      v.nested  = true
+      v.cpus    = 2
+    end
+
+    node.vm.provision "shell", path: "scripts/node-workerbootstrap.sh"
+  end
+
+end
